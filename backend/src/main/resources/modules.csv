@@ -1,0 +1,3 @@
+module_id,brand,model,technology,power_wc,nb_per_string,voc_v,isc_a,temp_coeff_pmax
+MOD-001,JA Solar,JAM72S30-545/MR,Monocrystallin,545,22,49.5,13.93,-0.35
+MOD-002,Longi Solar,LR5-72HIH-535M,Monocrystallin PERC,535,22,49.0,13.78,-0.34
