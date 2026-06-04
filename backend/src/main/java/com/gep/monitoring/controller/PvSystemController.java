@@ -35,7 +35,7 @@ public class PvSystemController {
             dto.setSystemName(sys.getSystemName());
             dto.setTotalCapacityKwc(sys.getTotalCapacityKwc());
             dto.setCommissioningDate(sys.getCommissioningDate());
-            dto.setLatestAcPowerKw(0.0); // On simulera la vraie valeur dans le vrai Service plus tard
+            dto.setLastAcPowerKw(0.0); // On simulera la vraie valeur dans le vrai Service plus tard
             return dto;
         }).collect(Collectors.toList());
 

@@ -1,27 +1,18 @@
-import { useEffect, useState } from 'react';
-import api from './api/axiosConfig';
+import { Routes, Route } from 'react-router-dom';
+import Dashboard from './pages/Dashboard';
+import SystemDetail from './pages/SystemDetail';
+import Login from './pages/Login';
+import MapPage from './pages/MapPage'; // <-- CORRECTION ICI : ./pages au lieu de ./components
+import './index.css';
 
 function App() {
-  const [systems, setSystems] = useState([]);
-
-  useEffect(() => {
-    api.get('/systems')
-      .then(response => {
-        setSystems(response.data);
-        console.log("Données reçues :", response.data);
-      })
-      .catch(error => console.error("Erreur API :", error));
-  }, []);
-
   return (
-    <div>
-      <h1>Liste des systèmes PV</h1>
-      <ul>
-        {systems.map(sys => (
-          <li key={sys.systemId}>{sys.systemName} - {sys.totalCapacityKwc} kWc</li>
-        ))}
-      </ul>
-    </div>
+    <Routes>
+      <Route path="/" element={<Dashboard />} />
+      <Route path="/system/:id" element={<SystemDetail />} />
+      <Route path="/map" element={<MapPage />} />
+      <Route path="/login" element={<Login />} />
+    </Routes>
   );
 }
 
