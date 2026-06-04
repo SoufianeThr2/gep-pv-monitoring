@@ -8,8 +8,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/production")
-@CrossOrigin(origins = "*") // Pour ne pas bloquer React
+// 1. MODIFICATION ICI : On aligne la base de l'URL sur celle de React
+@RequestMapping("/api/systems")
+@CrossOrigin(origins = "*")
 public class ProductionController {
 
     private final ProductionService productionService;
@@ -18,9 +19,14 @@ public class ProductionController {
         this.productionService = productionService;
     }
 
-    // Point d'entrée pour les graphiques d'un système spécifique
-    @GetMapping("/{systemId}")
-    public ResponseEntity<List<ProductionChartDto>> getProductionCharts(@PathVariable String systemId) {
+    // 2. MODIFICATION ICI : On ajoute /production à la fin, et on accepte les paramètres de date (start, end)
+    @GetMapping("/{systemId}/production")
+    public ResponseEntity<List<ProductionChartDto>> getProductionCharts(
+            @PathVariable String systemId,
+            @RequestParam(required = false) String start,
+            @RequestParam(required = false) String end) {
+
+        // Pour l'instant on n'utilise pas start et end dans le service, mais on les accepte pour ne pas faire planter React
         List<ProductionChartDto> chartData = productionService.getSystemProductionData(systemId);
 
         if(chartData.isEmpty()) {
