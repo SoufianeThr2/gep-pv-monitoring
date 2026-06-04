@@ -1,0 +1,5 @@
+system_id,system_name,latitude,longitude,total_capacity_kwc,commissioning_date,orientation,tilt_angle,nb_strings,module_id,inverter_id
+SYS-001,GEP Zone Nord,33.9716,-5.0078,500.4,2022-03-15,Sud,25,46,MOD-001,INV-001
+SYS-002,GEP Zone Est,33.9721,-5.0065,250.0,2022-03-15,Sud,25,23,MOD-001,INV-002
+SYS-003,GEP Zone Ouest,33.9708,-5.0091,320.5,2022-06-10,Sud-Est,22,29,MOD-002,INV-003
+SYS-004,GEP Zone Sud,33.9699,-5.0072,180.0,2022-06-10,Sud,30,16,MOD-002,INV-004
