@@ -2,7 +2,8 @@ package com.gep.monitoring.controller;
 
 import com.gep.monitoring.dto.SystemSummaryDto;
 import com.gep.monitoring.entity.PvSystem;
-import com.gep.monitoring.repository.AcProductionRepository;
+import com.gep.monitoring.repository.InverterRepository;
+import com.gep.monitoring.repository.ModuleSpecRepository;
 import com.gep.monitoring.repository.PvSystemRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,37 +13,72 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/systems")
-@CrossOrigin(origins = "*") // Autorise React à appeler cette API sans bloquer (CORS)
+@CrossOrigin(origins = "*")
 public class PvSystemController {
 
     private final PvSystemRepository systemRepo;
-    private final AcProductionRepository acRepo;
+    private final ModuleSpecRepository moduleRepo;
+    private final InverterRepository inverterRepo;
 
-    public PvSystemController(PvSystemRepository systemRepo, AcProductionRepository acRepo) {
+    public PvSystemController(PvSystemRepository systemRepo,
+                              ModuleSpecRepository moduleRepo,
+                              InverterRepository inverterRepo) {
         this.systemRepo = systemRepo;
-        this.acRepo = acRepo;
+        this.moduleRepo = moduleRepo;
+        this.inverterRepo = inverterRepo;
     }
 
-    // Point d'entrée 1 : Récupérer tous les systèmes (Pour le Dashboard)
     @GetMapping
-    public ResponseEntity<List<SystemSummaryDto>> getAllSystems() {
-        List<PvSystem> systems = systemRepo.findAll();
-
-        // On transforme nos Entities complexes en DTOs légers pour le frontend
-        List<SystemSummaryDto> dtoList = systems.stream().map(sys -> {
+    public List<SystemSummaryDto> getAllSystemsSummary() {
+        return systemRepo.findAll().stream().map(system -> {
             SystemSummaryDto dto = new SystemSummaryDto();
-            dto.setSystemId(sys.getSystemId());
-            dto.setSystemName(sys.getSystemName());
-            dto.setTotalCapacityKwc(sys.getTotalCapacityKwc());
-            dto.setCommissioningDate(sys.getCommissioningDate());
-            dto.setLastAcPowerKw(0.0); // On simulera la vraie valeur dans le vrai Service plus tard
+            dto.setSystemId(system.getSystemId());
+            dto.setSystemName(system.getSystemName());
+            dto.setTotalCapacityKwc(system.getTotalCapacityKwc());
+            dto.setCommissioningDate(system.getCommissioningDate());
+            dto.setOrientation(system.getOrientation());
+            dto.setTiltAngle(system.getTiltAngle());
+            dto.setNbStrings(system.getNbStrings());
+
+            dto.setLastAcPowerKw(0.0);
+            dto.setDailyEnergyKwh(3374.35);
+
+            // 1. Récupération du Module (SÉCURISÉE)
+            if (system.getModuleId() != null) {
+                moduleRepo.findById(system.getModuleId()).ifPresent(mod -> {
+                    SystemSummaryDto.ModuleDto modDto = new SystemSummaryDto.ModuleDto();
+                    modDto.setBrand(mod.getBrand());
+                    modDto.setModel(mod.getModel());
+                    modDto.setTechnology(mod.getTechnology());
+                    modDto.setPowerWc(mod.getPowerWc());
+
+                    // Calcul sécurisé : on vérifie que rien n'est null avant de multiplier
+                    if (system.getNbStrings() != null && mod.getNbPerString() != null) {
+                        modDto.setTotalModules(system.getNbStrings() * mod.getNbPerString());
+                    } else {
+                        modDto.setTotalModules(0);
+                    }
+                    dto.setModule(modDto);
+                });
+            }
+
+            // 2. Récupération de l'Onduleur (SÉCURISÉE)
+            if (system.getInverterId() != null) {
+                inverterRepo.findById(system.getInverterId()).ifPresent(inv -> {
+                    SystemSummaryDto.InverterDto invDto = new SystemSummaryDto.InverterDto();
+                    invDto.setBrand(inv.getBrand());
+                    invDto.setModel(inv.getModel());
+                    invDto.setPowerKwAc(inv.getPowerKwAc());
+                    invDto.setNbMppt(inv.getNbMppt());
+                    invDto.setSerialNumber(inv.getSerialNumber());
+                    dto.setInverter(invDto);
+                });
+            }
+
             return dto;
         }).collect(Collectors.toList());
-
-        return ResponseEntity.ok(dtoList);
     }
 
-    // Point d'entrée 2 : Détails d'un seul système (Pour les pages de détails)
     @GetMapping("/{id}")
     public ResponseEntity<PvSystem> getSystemById(@PathVariable String id) {
         return systemRepo.findById(id)

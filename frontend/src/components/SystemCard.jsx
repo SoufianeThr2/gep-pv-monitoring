@@ -3,11 +3,7 @@ import { useNavigate } from "react-router-dom";
 function SystemCard({ system }) {
   const navigate = useNavigate();
 
-  // Passage en camelCase
-  const moduleCount =
-    system.module?.nbPerString && system.nbStrings
-      ? system.module.nbPerString * system.nbStrings
-      : null;
+  const moduleCount = system.module?.totalModules ?? null;
 
   return (
     <article
