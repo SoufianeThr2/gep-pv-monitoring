@@ -17,14 +17,15 @@ This project is a full-stack web application designed for monitoring 4 photovolt
 ## Setup Instructions
 
 1. Clone the repository and navigate to the project root.
-2. Start the entire application stack using Docker Compose:
+2. **IMPORTANT**: Due to GitHub file size limits, the large GeoTIFF file (`masque.tif` / `plant_orthomap.tif` - ~190MB) is not included in the repository. Please copy the provided GeoTIFF file into the `frontend/public/` directory and ensure it is named `masque.tif` before starting the application.
+3. Start the entire application stack using Docker Compose:
 
 ```bash
 docker-compose up --build
 ```
 
-3. Wait for the containers to build and start. The backend will automatically ingest the provided CSV datasets into the PostgreSQL database upon the first startup.
-4. Access the web application at `http://localhost`.
+4. Wait for the containers to build and start. The backend will automatically ingest the provided CSV datasets into the PostgreSQL database upon the first startup.
+5. Access the web application at `http://localhost`.
 
 ### Credentials
 
