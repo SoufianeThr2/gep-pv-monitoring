@@ -1,10 +1,9 @@
-package com.gep.monitoring.config;
+package com.gep.monitoring.config; // Vérifie juste que ce "package" correspond bien au tien
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -19,23 +18,29 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Autorise React à nous parler
-                .csrf(AbstractHttpConfigurer::disable) // Désactive la protection CSRF (inutile pour une API REST pure)
+                // 1. Désactiver la protection CSRF (qui bloque souvent les requêtes POST/PUT depuis React)
+                .csrf(csrf -> csrf.disable())
+
+                // 2. Activer les règles CORS (définies juste en dessous)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
+                // 3. Autoriser l'accès à tes routes API
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/**").permitAll() // On laisse notre API ouverte pour pouvoir coder le Frontend facilement
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/**").permitAll() // On laisse le Frontend accéder à toutes les API
+                        .anyRequest().permitAll()
                 );
+
         return http.build();
     }
 
-    // Configuration officielle pour autoriser le port 3000 ou 5173 (les ports classiques de React)
+    // Configuration officielle pour autoriser le Frontend (React sur le port 5173 ou 3000) à discuter avec le Backend
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(Arrays.asList("*")); // En dev, on accepte tout le monde
+        configuration.setAllowedOrigins(Arrays.asList("*")); // Autorise toutes les origines
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
-        configuration.setAllowCredentials(true);
+
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;

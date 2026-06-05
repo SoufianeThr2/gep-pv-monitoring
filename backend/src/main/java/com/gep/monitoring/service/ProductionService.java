@@ -7,6 +7,7 @@ import com.gep.monitoring.repository.AcProductionRepository;
 import com.gep.monitoring.repository.DcProductionRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,39 +25,50 @@ public class ProductionService {
         this.dcRepo = dcRepo;
     }
 
-    // Algorithme de fusion des séries temporelles AC et DC
     public List<ProductionChartDto> getSystemProductionData(String systemId) {
-        List<AcProduction> acList = acRepo.findBySystemIdOrderByTimestampAsc(systemId);
-        List<DcProduction> dcList = dcRepo.findBySystemIdOrderByTimestampAsc(systemId);
+        return getSystemProductionData(systemId, null, null);
+    }
 
-        // TreeMap trie automatiquement par date (Timestamp)
+    public List<ProductionChartDto> getSystemProductionData(String systemId, String start, String end) {
+        List<AcProduction> acList;
+        List<DcProduction> dcList;
+
+        if (start != null && end != null) {
+            LocalDateTime startDt = LocalDate.parse(start).atStartOfDay();
+            LocalDateTime endDt = LocalDate.parse(end).atTime(23, 59, 59);
+            acList = acRepo.findBySystemIdAndTimestampBetweenOrderByTimestampAsc(systemId, startDt, endDt);
+            dcList = dcRepo.findBySystemIdAndTimestampBetweenOrderByTimestampAsc(systemId, startDt, endDt);
+        } else {
+            acList = acRepo.findBySystemIdOrderByTimestampAsc(systemId);
+            dcList = dcRepo.findBySystemIdOrderByTimestampAsc(systemId);
+        }
+
         Map<LocalDateTime, ProductionChartDto> chartMap = new TreeMap<>();
 
-        // 1. On parcourt les données AC et on les met dans la Map
         for (AcProduction ac : acList) {
-            // CORRECTION 1 : On utilise ac.getTimestamp() et ac.getAcPowerKw()
-            // On met 0.0 pour les autres champs en attendant de les remplir avec les vraies données
             chartMap.put(ac.getTimestamp(), new ProductionChartDto(
                     ac.getTimestamp(),
-                    ac.getAcPowerKw(), // Puissance AC
-                    0.0,               // Puissance DC (sera rempli par la boucle DC)
-                    0.0,               // Irradiance (sera rempli par la boucle DC)
-                    0.0,               // Énergie AC (mets ac.getAcEnergyKwh() si tu as le getter)
-                    0.0,               // Tension DC
-                    0.0,               // Courant DC
-                    0.0                // Température
+                    ac.getAcPowerKw(),
+                    0.0,
+                    0.0,
+                    ac.getAcEnergyKwh(),
+                    0.0,
+                    0.0,
+                    25.0
             ));
         }
 
-        // 2. On parcourt les données DC et on complète les informations manquantes
         for (DcProduction dc : dcList) {
-            // CORRECTION 2 : On s'assure qu'il y a bien 8 arguments ici aussi (le timestamp + 7 zéros)
-            ProductionChartDto dto = chartMap.getOrDefault(dc.getTimestamp(),
-                    new ProductionChartDto(dc.getTimestamp(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0));
+            double simulatedTemp = 20.0 + (dc.getIrradianceWm2() / 1000.0) * 15.0;
 
-            // On ajoute les données DC au DTO
+            ProductionChartDto dto = chartMap.getOrDefault(dc.getTimestamp(),
+                    new ProductionChartDto(dc.getTimestamp(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, simulatedTemp));
+
             dto.setDcPower(dc.getDcPowerKw());
             dto.setIrradiance(dc.getIrradianceWm2());
+            dto.setDcVoltage(dc.getDcVoltageV());
+            dto.setDcCurrent(dc.getDcCurrentA());
+            dto.setAmbientTemperature(simulatedTemp);
 
             chartMap.put(dc.getTimestamp(), dto);
         }

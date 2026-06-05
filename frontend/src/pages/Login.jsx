@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-// import { login } from "../api/axiosConfig"; // Désactivé tant que le backend n'a pas AuthController
 
 function Login() {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("admin@gep.ma");
-  const [password, setPassword] = useState("admin123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -16,21 +15,16 @@ function Login() {
     setLoading(true);
 
     try {
-      // Simulation d'un temps de réponse serveur (0.8 seconde)
-      await new Promise(resolve => setTimeout(resolve, 800));
+      await new Promise(resolve => setTimeout(resolve, 600));
 
-      // --- VÉRIFICATION STRICTE DE L'ADMIN ---
       if (email === "admin@gep.ma" && password === "admin123") {
-        // L'accès est accordé uniquement si la condition exacte est remplie
-        localStorage.setItem("access_token", "gep-admin-token-valide");
+        localStorage.setItem("access_token", "gep-admin-token");
         navigate("/");
       } else {
-        // On déclenche manuellement une erreur pour bloquer l'accès
-        throw new Error("Accès refusé");
+        setError("Email ou mot de passe incorrect.");
       }
-
-    } catch (err) {
-      setError("Email ou mot de passe incorrect.");
+    } catch {
+      setError("Une erreur est survenue. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }

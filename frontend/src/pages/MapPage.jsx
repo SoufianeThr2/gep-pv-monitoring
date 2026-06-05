@@ -82,13 +82,13 @@ function GeoTiffOverlay({ showThermal }) {
 
     return () => {
       isMounted = false;
-
       if (rgbLayerRef.current) {
-        map.removeLayer(rgbLayerRef.current);
+        try { map.removeLayer(rgbLayerRef.current); } catch {}
+        rgbLayerRef.current = null;
       }
-
       if (thermalLayerRef.current) {
-        map.removeLayer(thermalLayerRef.current);
+        try { map.removeLayer(thermalLayerRef.current); } catch {}
+        thermalLayerRef.current = null;
       }
     };
   }, [map]);

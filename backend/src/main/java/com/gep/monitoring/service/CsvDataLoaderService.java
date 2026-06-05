@@ -155,6 +155,9 @@ public class CsvDataLoaderService implements CommandLineRunner {
                 list.add(dc);
             }
             dcRepo.saveAll(list);
-        } catch (Exception e) { System.err.println("Erreur DC: " + e.getMessage()); }
+            System.out.println("Importation DC terminée : " + list.size() + " lignes chargées.");
+        } catch (Exception e) {
+            System.err.println("Erreur fatale lors de l'import DC: " + e.getMessage());
+        }
     }
 }
