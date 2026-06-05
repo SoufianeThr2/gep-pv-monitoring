@@ -4,6 +4,7 @@ import com.gep.monitoring.entity.*;
 import com.gep.monitoring.repository.*;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -21,20 +22,33 @@ public class CsvDataLoaderService implements CommandLineRunner {
     private final InverterRepository inverterRepo;
     private final DcProductionRepository dcRepo;
     private final AcProductionRepository acRepo;
+    private final UserRepository userRepo;
+    private final PasswordEncoder passwordEncoder;
 
     // Injection des dépendances (les Repositories qu'on a créés)
     public CsvDataLoaderService(PvSystemRepository pvSystemRepo, ModuleSpecRepository moduleRepo,
                                 InverterRepository inverterRepo, DcProductionRepository dcRepo,
-                                AcProductionRepository acRepo) {
+                                AcProductionRepository acRepo, UserRepository userRepo, PasswordEncoder passwordEncoder) {
         this.pvSystemRepo = pvSystemRepo;
         this.moduleRepo = moduleRepo;
         this.inverterRepo = inverterRepo;
         this.dcRepo = dcRepo;
         this.acRepo = acRepo;
+        this.userRepo = userRepo;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
     public void run(String... args) throws Exception {
+        // Création de l'utilisateur Admin par défaut s'il n'existe pas
+        if (userRepo.findByEmail("admin@gep.ma") == null) {
+            User admin = new User();
+            admin.setEmail("admin@gep.ma");
+            admin.setPassword(passwordEncoder.encode("admin123"));
+            userRepo.save(admin);
+            System.out.println("Utilisateur admin@gep.ma créé avec succès.");
+        }
+
         // On vérifie si la base est vide avant d'importer (pour ne pas dupliquer à chaque redémarrage)
         if (pvSystemRepo.count() == 0) {
             System.out.println("Base de données vide : Début de l'importation des CSV...");

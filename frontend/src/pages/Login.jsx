@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { login } from "../api/axiosConfig";
 
 function Login() {
   const navigate = useNavigate();
@@ -15,16 +16,19 @@ function Login() {
     setLoading(true);
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 600));
-
-      if (email === "admin@gep.ma" && password === "admin123") {
-        localStorage.setItem("access_token", "gep-admin-token");
-        navigate("/");
-      } else {
+      // Appel API d'authentification
+      const response = await login(email, password);
+      
+      // Stockage du token
+      localStorage.setItem("access_token", response.data.access_token);
+      navigate("/");
+      
+    } catch (err) {
+      if (err.response && err.response.status === 401) {
         setError("Email ou mot de passe incorrect.");
+      } else {
+        setError("Une erreur est survenue lors de la connexion.");
       }
-    } catch {
-      setError("Une erreur est survenue. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }

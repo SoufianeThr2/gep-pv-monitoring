@@ -1,10 +1,17 @@
-package com.gep.monitoring.config; // Vérifie juste que ce "package" correspond bien au tien
+package com.gep.monitoring.config;
 
+import com.gep.monitoring.security.JwtAuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -15,25 +22,40 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfig {
 
+    private final JwtAuthFilter jwtAuthFilter;
+
+    public SecurityConfig(JwtAuthFilter jwtAuthFilter) {
+        this.jwtAuthFilter = jwtAuthFilter;
+    }
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // 1. Désactiver la protection CSRF (qui bloque souvent les requêtes POST/PUT depuis React)
                 .csrf(csrf -> csrf.disable())
-
-                // 2. Activer les règles CORS (définies juste en dessous)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // 3. Autoriser l'accès à tes routes API
+                // Configuration pour REST (pas de session stateful)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/**").permitAll() // On laisse le Frontend accéder à toutes les API
-                        .anyRequest().permitAll()
-                );
+                        .requestMatchers("/api/auth/**").permitAll() // Login public
+                        .requestMatchers("/api/**").authenticated()  // Tout le reste sécurisé
+                        .anyRequest().permitAll() // Fichiers statiques frontend, swagger, etc.
+                )
+                // Ajout du filtre JWT avant le filtre d'authentification classique
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // Configuration officielle pour autoriser le Frontend (React sur le port 5173 ou 3000) à discuter avec le Backend
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
