@@ -1,16 +1,29 @@
 package com.gep.monitoring.controller;
 
+import com.gep.monitoring.dto.LoginRequestDto;
+import com.gep.monitoring.dto.LoginResponseDto;
 import com.gep.monitoring.security.JwtUtil;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
-
+/**
+ * Controller gérant les endpoints d'authentification.
+ *
+ * Responsabilité unique : recevoir les requêtes de login,
+ * déléguer la vérification à Spring Security, et retourner le JWT.
+ *
+ * Ce controller ne contient AUCUNE logique métier.
+ * Il ne parle à aucun Repository directement.
+ *
+ * Endpoint exposé :
+ * POST /api/auth/login → Authentifie l'utilisateur et retourne un token JWT
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -19,37 +32,46 @@ public class AuthController {
     private final UserDetailsService userDetailsService;
     private final JwtUtil jwtUtil;
 
-    public AuthController(AuthenticationManager authenticationManager, UserDetailsService userDetailsService, JwtUtil jwtUtil) {
+    public AuthController(AuthenticationManager authenticationManager,
+                          UserDetailsService userDetailsService,
+                          JwtUtil jwtUtil) {
         this.authenticationManager = authenticationManager;
         this.userDetailsService = userDetailsService;
         this.jwtUtil = jwtUtil;
     }
 
+    /**
+     * Authentifie un utilisateur et retourne un token JWT.
+     *
+     * Flux :
+     * 1. Spring Security vérifie l'email et le mot de passe (BCrypt)
+     * 2. Si correct → JwtUtil génère un token signé
+     * 3. Le token est retourné dans un LoginResponseDto propre
+     * 4. Si incorrect → HTTP 401 Unauthorized
+     *
+     * @param loginRequest DTO contenant email et mot de passe
+     * @return HTTP 200 avec LoginResponseDto (token) ou HTTP 401 si identifiants incorrects
+     */
     @PostMapping("/login")
-    public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthRequest authRequest) throws Exception {
+    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto loginRequest) {
         try {
+            // Délégation à Spring Security pour vérification email + mot de passe BCrypt
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.getEmail(), authRequest.getPassword())
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail(),
+                            loginRequest.getPassword()
+                    )
             );
-        } catch (Exception e) {
-            return ResponseEntity.status(401).body(Map.of("error", "Email ou mot de passe incorrect"));
+        } catch (BadCredentialsException e) {
+            // Identifiants incorrects → 401 Unauthorized
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        final UserDetails userDetails = userDetailsService.loadUserByUsername(authRequest.getEmail());
+        // Authentification réussie → génération du token JWT
+        final UserDetails userDetails = userDetailsService.loadUserByUsername(loginRequest.getEmail());
         final String jwt = jwtUtil.generateToken(userDetails);
 
-        Map<String, String> response = new HashMap<>();
-        response.put("access_token", jwt);
-        return ResponseEntity.ok(response);
+        // Retour du token dans un DTO typé (plus propre qu'un HashMap)
+        return ResponseEntity.ok(new LoginResponseDto(jwt));
     }
-}
-
-class AuthRequest {
-    private String email;
-    private String password;
-
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-    public String getPassword() { return password; }
-    public void setPassword(String password) { this.password = password; }
 }

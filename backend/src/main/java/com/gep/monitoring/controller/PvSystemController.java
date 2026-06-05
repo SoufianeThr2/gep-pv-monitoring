@@ -2,86 +2,57 @@ package com.gep.monitoring.controller;
 
 import com.gep.monitoring.dto.SystemSummaryDto;
 import com.gep.monitoring.entity.PvSystem;
-import com.gep.monitoring.repository.InverterRepository;
-import com.gep.monitoring.repository.ModuleSpecRepository;
-import com.gep.monitoring.repository.PvSystemRepository;
+import com.gep.monitoring.service.PvSystemService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
+/**
+ * Controller gérant les endpoints des systèmes PV.
+ *
+ * Responsabilité unique : recevoir les requêtes HTTP, déléguer
+ * au PvSystemService, et retourner la réponse HTTP appropriée.
+ *
+ * Ce controller ne contient AUCUNE logique métier.
+ * Il n'injecte qu'UN SEUL service (PvSystemService).
+ * Il ne parle à AUCUN Repository directement.
+ *
+ * Endpoints exposés :
+ * GET /api/systems/system     → Liste de tous les systèmes (Dashboard)
+ * GET /api/systems/{id}       → Détail d'un système par son ID
+ */
 @RestController
 @RequestMapping("/api/systems")
 @CrossOrigin(origins = "*")
 public class PvSystemController {
 
-    private final PvSystemRepository systemRepo;
-    private final ModuleSpecRepository moduleRepo;
-    private final InverterRepository inverterRepo;
+    private final PvSystemService pvSystemService;
 
-    public PvSystemController(PvSystemRepository systemRepo,
-                              ModuleSpecRepository moduleRepo,
-                              InverterRepository inverterRepo) {
-        this.systemRepo = systemRepo;
-        this.moduleRepo = moduleRepo;
-        this.inverterRepo = inverterRepo;
+    public PvSystemController(PvSystemService pvSystemService) {
+        this.pvSystemService = pvSystemService;
     }
 
-    @GetMapping
-    public List<SystemSummaryDto> getAllSystemsSummary() {
-        return systemRepo.findAll().stream().map(system -> {
-            SystemSummaryDto dto = new SystemSummaryDto();
-            dto.setSystemId(system.getSystemId());
-            dto.setSystemName(system.getSystemName());
-            dto.setTotalCapacityKwc(system.getTotalCapacityKwc());
-            dto.setCommissioningDate(system.getCommissioningDate());
-            dto.setOrientation(system.getOrientation());
-            dto.setTiltAngle(system.getTiltAngle());
-            dto.setNbStrings(system.getNbStrings());
-
-            dto.setLastAcPowerKw(0.0);
-            dto.setDailyEnergyKwh(3374.35);
-
-            // 1. Récupération du Module (SÉCURISÉE)
-            if (system.getModuleId() != null) {
-                moduleRepo.findById(system.getModuleId()).ifPresent(mod -> {
-                    SystemSummaryDto.ModuleDto modDto = new SystemSummaryDto.ModuleDto();
-                    modDto.setBrand(mod.getBrand());
-                    modDto.setModel(mod.getModel());
-                    modDto.setTechnology(mod.getTechnology());
-                    modDto.setPowerWc(mod.getPowerWc());
-
-                    // Calcul sécurisé : on vérifie que rien n'est null avant de multiplier
-                    if (system.getNbStrings() != null && mod.getNbPerString() != null) {
-                        modDto.setTotalModules(system.getNbStrings() * mod.getNbPerString());
-                    } else {
-                        modDto.setTotalModules(0);
-                    }
-                    dto.setModule(modDto);
-                });
-            }
-
-            // 2. Récupération de l'Onduleur (SÉCURISÉE)
-            if (system.getInverterId() != null) {
-                inverterRepo.findById(system.getInverterId()).ifPresent(inv -> {
-                    SystemSummaryDto.InverterDto invDto = new SystemSummaryDto.InverterDto();
-                    invDto.setBrand(inv.getBrand());
-                    invDto.setModel(inv.getModel());
-                    invDto.setPowerKwAc(inv.getPowerKwAc());
-                    invDto.setNbMppt(inv.getNbMppt());
-                    invDto.setSerialNumber(inv.getSerialNumber());
-                    dto.setInverter(invDto);
-                });
-            }
-
-            return dto;
-        }).collect(Collectors.toList());
+    /**
+     * Retourne le résumé de tous les systèmes PV pour le Dashboard.
+     *
+     * @return HTTP 200 avec la liste de SystemSummaryDto
+     */
+    @GetMapping("/system")
+    public ResponseEntity<List<SystemSummaryDto>> getAllSystemsSummary() {
+        List<SystemSummaryDto> summaries = pvSystemService.getAllSystemsSummary();
+        return ResponseEntity.ok(summaries);
     }
 
+    /**
+     * Retourne les données complètes d'un système PV spécifique.
+     *
+     * @param id L'identifiant du système (ex: "SYS-001")
+     * @return HTTP 200 avec l'entité PvSystem, ou HTTP 404 si non trouvé
+     */
     @GetMapping("/{id}")
     public ResponseEntity<PvSystem> getSystemById(@PathVariable String id) {
-        return systemRepo.findById(id)
+        return pvSystemService.getSystemById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

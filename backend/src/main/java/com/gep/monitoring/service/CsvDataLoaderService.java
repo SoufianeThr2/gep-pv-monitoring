@@ -14,6 +14,19 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Service d'initialisation des données au démarrage de l'application.
+ *
+ * Implémente CommandLineRunner, ce qui signifie que la méthode run()
+ * est exécutée automatiquement par Spring Boot juste après le démarrage.
+ *
+ * Responsabilités :
+ * 1. Créer un compte administrateur par défaut (si inexistant)
+ * 2. Importer les données CSV dans la base de données PostgreSQL (si vide)
+ *
+ * Ordre d'import important (contraintes de clés étrangères) :
+ * modules → inverters → pvsystems → ac_production → dc_production
+ */
 @Service
 public class CsvDataLoaderService implements CommandLineRunner {
 
@@ -25,10 +38,13 @@ public class CsvDataLoaderService implements CommandLineRunner {
     private final UserRepository userRepo;
     private final PasswordEncoder passwordEncoder;
 
-    // Injection des dépendances (les Repositories qu'on a créés)
-    public CsvDataLoaderService(PvSystemRepository pvSystemRepo, ModuleSpecRepository moduleRepo,
-                                InverterRepository inverterRepo, DcProductionRepository dcRepo,
-                                AcProductionRepository acRepo, UserRepository userRepo, PasswordEncoder passwordEncoder) {
+    public CsvDataLoaderService(PvSystemRepository pvSystemRepo,
+                                ModuleSpecRepository moduleRepo,
+                                InverterRepository inverterRepo,
+                                DcProductionRepository dcRepo,
+                                AcProductionRepository acRepo,
+                                UserRepository userRepo,
+                                PasswordEncoder passwordEncoder) {
         this.pvSystemRepo = pvSystemRepo;
         this.moduleRepo = moduleRepo;
         this.inverterRepo = inverterRepo;
@@ -38,36 +54,57 @@ public class CsvDataLoaderService implements CommandLineRunner {
         this.passwordEncoder = passwordEncoder;
     }
 
+    /**
+     * Point d'entrée principal — appelé automatiquement au démarrage par Spring Boot.
+     */
     @Override
     public void run(String... args) throws Exception {
-        // Création de l'utilisateur Admin par défaut s'il n'existe pas
-        if (userRepo.findByEmail("admin@gep.ma") == null) {
+        createDefaultAdminUser();
+        importCsvDataIfEmpty();
+    }
+
+    /**
+     * Crée l'utilisateur administrateur par défaut si il n'existe pas encore en base.
+     * Le mot de passe est haché avec BCrypt avant d'être stocké.
+     */
+    private void createDefaultAdminUser() {
+        // Utilisation de Optional (isPresent()) au lieu de == null
+        // car UserRepository retourne maintenant Optional<User>
+        if (userRepo.findByEmail("admin@gep.ma").isEmpty()) {
             User admin = new User();
             admin.setEmail("admin@gep.ma");
             admin.setPassword(passwordEncoder.encode("admin123"));
             userRepo.save(admin);
             System.out.println("Utilisateur admin@gep.ma créé avec succès.");
         }
+    }
 
-        // On vérifie si la base est vide avant d'importer (pour ne pas dupliquer à chaque redémarrage)
+    /**
+     * Lance l'import de tous les CSV uniquement si la base de données est vide.
+     * Ce mécanisme évite de dupliquer les données à chaque redémarrage du serveur.
+     */
+    private void importCsvDataIfEmpty() {
         if (pvSystemRepo.count() == 0) {
             System.out.println("Base de données vide : Début de l'importation des CSV...");
-
             loadModules();
             loadInverters();
             loadPvSystems();
             loadAcProduction();
             loadDcProduction();
-
             System.out.println("Importation terminée avec succès !");
         } else {
             System.out.println("Les données existent déjà dans la base. Importation ignorée.");
         }
     }
 
+    /**
+     * Charge le fichier modules.csv et insère les données en base.
+     * Chaque ligne = un type de module photovoltaïque.
+     */
     private void loadModules() {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(new ClassPathResource("modules.csv").getInputStream()))) {
-            br.readLine(); // Ignorer la première ligne (les en-têtes)
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(new ClassPathResource("modules.csv").getInputStream()))) {
+            br.readLine(); // Ignorer la ligne d'en-têtes
             String line;
             while ((line = br.readLine()) != null) {
                 String[] data = line.split(",");
@@ -83,11 +120,19 @@ public class CsvDataLoaderService implements CommandLineRunner {
                 module.setTempCoeffPmax(Double.parseDouble(data[8]));
                 moduleRepo.save(module);
             }
-        } catch (Exception e) { System.err.println("Erreur Modules: " + e.getMessage()); }
+            System.out.println("Importation Modules terminée.");
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'import Modules: " + e.getMessage());
+        }
     }
 
+    /**
+     * Charge le fichier inverters.csv et insère les données en base.
+     * Chaque ligne = un onduleur lié à un système PV.
+     */
     private void loadInverters() {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(new ClassPathResource("inverters.csv").getInputStream()))) {
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(new ClassPathResource("inverters.csv").getInputStream()))) {
             br.readLine();
             String line;
             while ((line = br.readLine()) != null) {
@@ -105,11 +150,19 @@ public class CsvDataLoaderService implements CommandLineRunner {
                 inv.setSystemId(data[9]);
                 inverterRepo.save(inv);
             }
-        } catch (Exception e) { System.err.println("Erreur Onduleurs: " + e.getMessage()); }
+            System.out.println("Importation Onduleurs terminée.");
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'import Onduleurs: " + e.getMessage());
+        }
     }
 
+    /**
+     * Charge le fichier pvsystems.csv et insère les données en base.
+     * Chaque ligne = un système PV complet avec ses coordonnées et métadonnées.
+     */
     private void loadPvSystems() {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(new ClassPathResource("pvsystems.csv").getInputStream()))) {
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(new ClassPathResource("pvsystems.csv").getInputStream()))) {
             br.readLine();
             String line;
             while ((line = br.readLine()) != null) {
@@ -128,14 +181,23 @@ public class CsvDataLoaderService implements CommandLineRunner {
                 sys.setInverterId(data[10]);
                 pvSystemRepo.save(sys);
             }
-        } catch (Exception e) { System.err.println("Erreur PvSystems: " + e.getMessage()); }
+            System.out.println("Importation Systèmes PV terminée.");
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'import PvSystems: " + e.getMessage());
+        }
     }
 
+    /**
+     * Charge le fichier ac_production.csv et insère les données en base.
+     * Utilise saveAll() pour une insertion groupée (batch) — beaucoup plus rapide
+     * qu'un save() individuel pour chaque ligne.
+     */
     private void loadAcProduction() {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(new ClassPathResource("ac_production.csv").getInputStream()))) {
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(new ClassPathResource("ac_production.csv").getInputStream()))) {
             br.readLine();
             String line;
-            List<AcProduction> list = new ArrayList<>(); // On utilise une liste pour sauvegarder tout d'un coup (plus rapide)
+            List<AcProduction> list = new ArrayList<>();
             while ((line = br.readLine()) != null) {
                 String[] data = line.split(",");
                 AcProduction ac = new AcProduction();
@@ -148,12 +210,20 @@ public class CsvDataLoaderService implements CommandLineRunner {
                 ac.setPowerFactor(Double.parseDouble(data[6]));
                 list.add(ac);
             }
-            acRepo.saveAll(list);
-        } catch (Exception e) { System.err.println("Erreur AC: " + e.getMessage()); }
+            acRepo.saveAll(list); // Insertion groupée = batch insert
+            System.out.println("Importation AC terminée : " + list.size() + " lignes chargées.");
+        } catch (Exception e) {
+            System.err.println("Erreur lors de l'import AC: " + e.getMessage());
+        }
     }
 
+    /**
+     * Charge le fichier dc_production.csv et insère les données en base.
+     * Utilise saveAll() pour une insertion groupée (batch).
+     */
     private void loadDcProduction() {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(new ClassPathResource("dc_production.csv").getInputStream()))) {
+        try (BufferedReader br = new BufferedReader(
+                new InputStreamReader(new ClassPathResource("dc_production.csv").getInputStream()))) {
             br.readLine();
             String line;
             List<DcProduction> list = new ArrayList<>();
@@ -168,7 +238,7 @@ public class CsvDataLoaderService implements CommandLineRunner {
                 dc.setIrradianceWm2(Double.parseDouble(data[5]));
                 list.add(dc);
             }
-            dcRepo.saveAll(list);
+            dcRepo.saveAll(list); // Insertion groupée = batch insert
             System.out.println("Importation DC terminée : " + list.size() + " lignes chargées.");
         } catch (Exception e) {
             System.err.println("Erreur fatale lors de l'import DC: " + e.getMessage());
