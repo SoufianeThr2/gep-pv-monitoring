@@ -46,7 +46,7 @@ export const getSystem = (systemId) => {
 };
 
 export const getSystemProduction = (systemId, start, end) => {
-  return api.get(`/systems/${systemId}/production`, {
+  return api.get(`/production/${systemId}`, {
     params: { start, end },
   });
 };

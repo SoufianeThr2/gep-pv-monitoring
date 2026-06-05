@@ -1,1 +1,14 @@
-"masque.tif" 
+# Fichiers volumineux
+*.tif
+masque.tif
+frontend/public/masque.tif
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Build
+node_modules/
+dist/
+target/
