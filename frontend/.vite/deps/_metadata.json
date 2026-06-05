@@ -1,0 +1,76 @@
+{
+  "hash": "df987c16",
+  "configHash": "6c222e02",
+  "lockfileHash": "cd5aeee5",
+  "browserHash": "7c683550",
+  "optimized": {
+    "axios": {
+      "src": "../../node_modules/axios/index.js",
+      "file": "axios.js",
+      "fileHash": "82bbbfc4",
+      "needsInterop": false
+    },
+    "georaster-layer-for-leaflet": {
+      "src": "../../node_modules/georaster-layer-for-leaflet/dist/v3/babel/esm/georaster-layer-for-leaflet.js",
+      "file": "georaster-layer-for-leaflet.js",
+      "fileHash": "23cefec3",
+      "needsInterop": false
+    },
+    "georaster": {
+      "src": "../../node_modules/georaster/dist/georaster.browser.bundle.min.js",
+      "file": "georaster.js",
+      "fileHash": "99b30ef4",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "63b1cf9b",
+      "needsInterop": true
+    },
+    "react-leaflet": {
+      "src": "../../node_modules/react-leaflet/lib/index.js",
+      "file": "react-leaflet.js",
+      "fileHash": "cdee4c63",
+      "needsInterop": false
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/react-router-dom/dist/index.mjs",
+      "file": "react-router-dom.js",
+      "fileHash": "be38f668",
+      "needsInterop": false
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "d5ab80c7",
+      "needsInterop": true
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "be3fae5d",
+      "needsInterop": true
+    },
+    "recharts": {
+      "src": "../../node_modules/recharts/es6/index.js",
+      "file": "recharts.js",
+      "fileHash": "1c937904",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-_TIqcEvS": {
+      "file": "chunk-_TIqcEvS.js",
+      "isDynamicEntry": false
+    },
+    "leaflet-src-DmhtlSwT": {
+      "file": "leaflet-src-DmhtlSwT.js",
+      "isDynamicEntry": false
+    },
+    "react-dom-C7gOqOEm": {
+      "file": "react-dom-C7gOqOEm.js",
+      "isDynamicEntry": false
+    }
+  }
+}
