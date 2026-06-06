@@ -1,10 +1,6 @@
 package com.gep.monitoring.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-
 import java.time.LocalDateTime;
 
 /**
@@ -14,29 +10,60 @@ import java.time.LocalDateTime;
  */
 @Entity
 @Table(name = "dc_production")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class DcProduction {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;                    // ID auto-généré
+    private Long id;
 
-    private LocalDateTime timestamp;    // Date et heure de la mesure
+    private LocalDateTime timestamp;
 
     @Column(name = "system_id")
-    private String systemId;            // Référence au système PV
+    private String systemId;
 
     @Column(name = "dc_power_kw")
-    private Double dcPowerKw;           // Puissance DC en kW
+    private Double dcPowerKw;
 
     @Column(name = "dc_voltage_v")
-    private Double dcVoltageV;          // Tension DC en Volts
+    private Double dcVoltageV;
 
     @Column(name = "dc_current_a")
-    private Double dcCurrentA;          // Courant DC en Ampères
+    private Double dcCurrentA;
 
     @Column(name = "irradiance_wm2")
-    private Double irradianceWm2;       // Irradiance solaire en W/m²
+    private Double irradianceWm2;
+
+    public DcProduction() {
+    }
+
+    public DcProduction(Long id, LocalDateTime timestamp, String systemId, Double dcPowerKw, Double dcVoltageV, Double dcCurrentA, Double irradianceWm2) {
+        this.id = id;
+        this.timestamp = timestamp;
+        this.systemId = systemId;
+        this.dcPowerKw = dcPowerKw;
+        this.dcVoltageV = dcVoltageV;
+        this.dcCurrentA = dcCurrentA;
+        this.irradianceWm2 = irradianceWm2;
+    }
+
+    public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
+
+    public LocalDateTime getTimestamp() { return timestamp; }
+    public void setTimestamp(LocalDateTime timestamp) { this.timestamp = timestamp; }
+
+    public String getSystemId() { return systemId; }
+    public void setSystemId(String systemId) { this.systemId = systemId; }
+
+    public Double getDcPowerKw() { return dcPowerKw; }
+    public void setDcPowerKw(Double dcPowerKw) { this.dcPowerKw = dcPowerKw; }
+
+    public Double getDcVoltageV() { return dcVoltageV; }
+    public void setDcVoltageV(Double dcVoltageV) { this.dcVoltageV = dcVoltageV; }
+
+    public Double getDcCurrentA() { return dcCurrentA; }
+    public void setDcCurrentA(Double dcCurrentA) { this.dcCurrentA = dcCurrentA; }
+
+    public Double getIrradianceWm2() { return irradianceWm2; }
+    public void setIrradianceWm2(Double irradianceWm2) { this.irradianceWm2 = irradianceWm2; }
 }

@@ -4,9 +4,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
 
 /**
  * Entité représentant les spécifications techniques d'un module photovoltaïque.
@@ -15,32 +12,70 @@ import lombok.AllArgsConstructor;
  */
 @Entity
 @Table(name = "modules")
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
 public class ModuleSpec {
 
     @Id
     @Column(name = "module_id")
-    private String moduleId;            // Identifiant unique du module
+    private String moduleId;
 
-    private String brand;               // Marque (ex: "Jinko Solar")
-    private String model;               // Modèle du panneau
-
-    private String technology;          // Technologie (ex: "Mono-Si", "Mono PERC")
+    private String brand;
+    private String model;
+    private String technology;
 
     @Column(name = "power_wc")
-    private Integer powerWc;            // Puissance unitaire en Wc
+    private Integer powerWc;
 
     @Column(name = "nb_per_string")
-    private Integer nbPerString;        // Nombre de panneaux par string
+    private Integer nbPerString;
 
     @Column(name = "voc_v")
-    private Double vocV;                // Tension de circuit ouvert en Volts
+    private Double vocV;
 
     @Column(name = "isc_a")
-    private Double iscA;                // Courant de court-circuit en Ampères
+    private Double iscA;
 
     @Column(name = "temp_coeff_pmax")
-    private Double tempCoeffPmax;       // Coefficient de température de la puissance max
+    private Double tempCoeffPmax;
+
+    public ModuleSpec() {
+    }
+
+    public ModuleSpec(String moduleId, String brand, String model, String technology, Integer powerWc, Integer nbPerString, Double vocV, Double iscA, Double tempCoeffPmax) {
+        this.moduleId = moduleId;
+        this.brand = brand;
+        this.model = model;
+        this.technology = technology;
+        this.powerWc = powerWc;
+        this.nbPerString = nbPerString;
+        this.vocV = vocV;
+        this.iscA = iscA;
+        this.tempCoeffPmax = tempCoeffPmax;
+    }
+
+    public String getModuleId() { return moduleId; }
+    public void setModuleId(String moduleId) { this.moduleId = moduleId; }
+
+    public String getBrand() { return brand; }
+    public void setBrand(String brand) { this.brand = brand; }
+
+    public String getModel() { return model; }
+    public void setModel(String model) { this.model = model; }
+
+    public String getTechnology() { return technology; }
+    public void setTechnology(String technology) { this.technology = technology; }
+
+    public Integer getPowerWc() { return powerWc; }
+    public void setPowerWc(Integer powerWc) { this.powerWc = powerWc; }
+
+    public Integer getNbPerString() { return nbPerString; }
+    public void setNbPerString(Integer nbPerString) { this.nbPerString = nbPerString; }
+
+    public Double getVocV() { return vocV; }
+    public void setVocV(Double vocV) { this.vocV = vocV; }
+
+    public Double getIscA() { return iscA; }
+    public void setIscA(Double iscA) { this.iscA = iscA; }
+
+    public Double getTempCoeffPmax() { return tempCoeffPmax; }
+    public void setTempCoeffPmax(Double tempCoeffPmax) { this.tempCoeffPmax = tempCoeffPmax; }
 }

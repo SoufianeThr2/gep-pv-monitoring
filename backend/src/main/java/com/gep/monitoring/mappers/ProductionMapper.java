@@ -25,16 +25,16 @@ public class ProductionMapper {
      * @return Un ProductionChartDto partiellement rempli (données AC uniquement)
      */
     public ProductionChartDto fromAcProduction(AcProduction ac) {
-        return new ProductionChartDto(
-                ac.getTimestamp(),
-                ac.getAcPowerKw(),      // acPower
-                0.0,                    // dcPower (sera complété par enrichWithDcData)
-                0.0,                    // irradiance (sera complété par enrichWithDcData)
-                ac.getAcEnergyKwh(),    // acEnergy
-                0.0,                    // dcVoltage (sera complété par enrichWithDcData)
-                0.0,                    // dcCurrent (sera complété par enrichWithDcData)
-                25.0                    // ambientTemperature (valeur par défaut)
-        );
+        ProductionChartDto dto = new ProductionChartDto();
+        dto.setTimestamp(ac.getTimestamp());
+        dto.setAcPower(ac.getAcPowerKw());
+        dto.setDcPower(0.0);                    // sera complété par enrichWithDcData
+        dto.setIrradiance(0.0);                 // sera complété par enrichWithDcData
+        dto.setAcEnergy(ac.getAcEnergyKwh());
+        dto.setDcVoltage(0.0);                  // sera complété par enrichWithDcData
+        dto.setDcCurrent(0.0);                  // sera complété par enrichWithDcData
+        dto.setAmbientTemperature(25.0);        // valeur par défaut
+        return dto;
     }
 
     /**
@@ -69,15 +69,15 @@ public class ProductionMapper {
     public ProductionChartDto fromDcProductionOnly(DcProduction dc) {
         double simulatedTemp = 20.0 + (dc.getIrradianceWm2() / 1000.0) * 15.0;
 
-        return new ProductionChartDto(
-                dc.getTimestamp(),
-                0.0,                        // acPower (pas de données AC)
-                dc.getDcPowerKw(),           // dcPower
-                dc.getIrradianceWm2(),       // irradiance
-                0.0,                         // acEnergy (pas de données AC)
-                dc.getDcVoltageV(),          // dcVoltage
-                dc.getDcCurrentA(),          // dcCurrent
-                simulatedTemp                // température simulée
-        );
+        ProductionChartDto dto = new ProductionChartDto();
+        dto.setTimestamp(dc.getTimestamp());
+        dto.setAcPower(0.0);                        // pas de données AC
+        dto.setDcPower(dc.getDcPowerKw());
+        dto.setIrradiance(dc.getIrradianceWm2());
+        dto.setAcEnergy(0.0);                       // pas de données AC
+        dto.setDcVoltage(dc.getDcVoltageV());
+        dto.setDcCurrent(dc.getDcCurrentA());
+        dto.setAmbientTemperature(simulatedTemp);
+        return dto;
     }
 }
