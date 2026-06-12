@@ -20,7 +20,7 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    if (error.response?.status === 401 || error.response?.status === 403) {
       localStorage.removeItem("access_token");
       localStorage.removeItem("refresh_token");
       window.location.href = "/login";
@@ -38,7 +38,7 @@ export const login = (email, password) => {
 };
 
 export const getSystems = () => {
-  return api.get("/systems");
+  return api.get("/systems/system");
 };
 
 export const getSystem = (systemId) => {

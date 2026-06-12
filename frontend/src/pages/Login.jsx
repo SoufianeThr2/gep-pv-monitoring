@@ -20,7 +20,7 @@ function Login() {
       const response = await login(email, password);
       
       // Stockage du token
-      localStorage.setItem("access_token", response.data.access_token);
+      localStorage.setItem("access_token", response.data.accessToken);
       navigate("/");
       
     } catch (err) {

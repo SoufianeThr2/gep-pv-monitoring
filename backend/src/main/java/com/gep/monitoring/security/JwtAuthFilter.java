@@ -38,7 +38,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         jwtToken = authHeader.substring(7);
-        userEmail = jwtUtil.extractUsername(jwtToken);
+        try {
+            userEmail = jwtUtil.extractUsername(jwtToken);
+        } catch (Exception e) {
+            // Token expiré ou invalide. On laisse Spring Security gérer (qui renverra 401/403).
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
